@@ -2,7 +2,7 @@ Project
 
 packages
 ```{r}
-install.packages("rvest")
+# install.packages("rvest")
 library(rvest)
 ```
 
@@ -14,7 +14,8 @@ url <- "https://help.adjust.com/en/article/countries-by-region"
 page <- read_html(url)
 
 # Extract the first table
-country_table <- html_table(html_element(page, "table"))
+country_table <- data.frame(html_table(html_element(page, "table")))
+country_table$Country.code <- toupper(country_table$Country.code)
 
 head(country_table)
 ```
@@ -24,17 +25,26 @@ music_data <- read.csv("top_Trending_songs.csv", stringsAsFactors = FALSE)
 
 head(music_data)
 ```
+```{r}
+#Update
+music_data$country <- country_table$Country[match(music_data$country, country_table$Country.code)]
+
+#This method can directly match the rules and change the content without merging the dataframe and disrupting the order of the columns.
+
+#then no need next chunk
+```
 
 ```{r}
 # Merge on the country code
 music_data <- merge(music_data,
                     country_table,
                     by.x = "country",
-                    by.y = "Country code",
+                    by.y = "Country.code",
                     all.x = TRUE)
 
+
 # Reorder columns
-music_data <- music_data[, c("Country", "country",
+music_data <- music_data[, c("country",
                              "spotify_id", "name", "artists", "daily_rank",
                              "daily_movement", "weekly_movement", "snapshot_date",
                              "popularity", "is_explicit", "duration_ms", "album_name",
