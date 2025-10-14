@@ -14,7 +14,7 @@ url <- "https://help.adjust.com/en/article/countries-by-region"
 page <- read_html(url)
 
 # Extract the first table
-country_table <- data.frame(html_table(html_element(page, "table")))
+country_table <- data.frame(html_table(html_element(page, "table"),na = character(0)))
 country_table$Country.code <- toupper(country_table$Country.code)
 
 head(country_table)
@@ -59,6 +59,7 @@ write.csv(music_data, "Music_With_Country.csv", row.names = FALSE)
 mergeM <- read.csv("Music_With_Country.csv")
 head(mergeM)
 ```
+
 
 
 
