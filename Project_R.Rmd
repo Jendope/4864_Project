@@ -7,23 +7,39 @@ library(rvest)
 ```
 
 ```{r}
-# URL
-url <- "https://help.adjust.com/en/article/countries-by-region"
+# 1. Extract the full name of ISO Country code from https://help.adjust.com/en/article/countriesby-region 
 
 # Read the HTML page
-page <- read_html(url)
+page <- read_html("https://help.adjust.com/en/article/countries-by-region")
 
 # Extract the first table
 country_table <- data.frame(html_table(html_element(page, "table"),na = character(0)))
+
+# Change all country codes to uppercase to match music_table
 country_table$Country.code <- toupper(country_table$Country.code)
 
+# Add the full name of the region
+regionName <- c("EMEA" = "Europe, the Middle East and Africa",
+                "NA" = "North America",
+                "LATAM" = "Latin America",
+                "APAC" = "Asia-Pacific")
+
+country_table$Region_name <- regionName[country_table$Region]
 head(country_table)
 ```
 ```{r}
-# Dataset
-music_data <- read.csv("top_Trending_songs.csv", stringsAsFactors = FALSE)
+# 2. convert the country to the fill name
+# Load dataset
+music_data <- read.csv("top_Trending_songs.csv")
 
+# Change the country of the first fifty records to ‘Global’
+music_data$country[1:50] <- "Global"
+
+# Change the two date-related columns to date format
+music_data$snapshot_date <- as.Date(music_data$snapshot_date)
+music_data$album_release_date <- as.Date(music_data$album_release_date)
 head(music_data)
+
 ```
 ```{r}
 #Update
@@ -53,13 +69,16 @@ music_data <- music_data[, c("country",
                              "instrumentalness", "liveness", "valence", "tempo",
                              "time_signature")]
 
+
+```
+
+
+```{r}
 # Save the merged dataset
 write.csv(music_data, "Music_With_Country.csv", row.names = FALSE)
 
 mergeM <- read.csv("Music_With_Country.csv")
 head(mergeM)
 ```
-
-
 
 
