@@ -41,14 +41,7 @@ music_data$album_release_date <- as.Date(music_data$album_release_date)
 head(music_data)
 
 ```
-```{r}
-#Update
-music_data$country <- country_table$Country[match(music_data$country, country_table$Country.code)]
 
-#This method can directly match the rules and change the content without merging the dataframe and disrupting the order of the columns.
-
-#then no need next chunk
-```
 
 ```{r}
 # Merge on the country code
@@ -59,26 +52,62 @@ music_data <- merge(music_data,
                     all.x = TRUE)
 
 
-# Reorder columns
-music_data <- music_data[, c("country",
-                             "spotify_id", "name", "artists", "daily_rank",
-                             "daily_movement", "weekly_movement", "snapshot_date",
-                             "popularity", "is_explicit", "duration_ms", "album_name",
-                             "album_release_date", "danceability", "energy", "key",
-                             "loudness", "mode", "speechiness", "acousticness",
-                             "instrumentalness", "liveness", "valence", "tempo",
-                             "time_signature")]
-
+# Change all relative information of Global to Global
+colnames(music_data)[colnames(music_data) == "Country"] <- "Name"
+music_data$Name[music_data$country == "Global"] <- "Global"
+music_data$Region_name[music_data$country == "Global"] <- "Global"
 
 ```
 
 
 ```{r}
-# Save the merged dataset
-write.csv(music_data, "Music_With_Country.csv", row.names = FALSE)
+# 3. Label the valence and speechiness value by the following table
+# Category/Range    | < 1st quartile  | 1st quartile ~ Median | Median ~ 3rd quartile | > 3rd quartile
+# speechiness       | Pure music      | Song and words balaced| Word leads music      | Words oriented
+# valence           | darkness        | Gray feeling          | positive              | brightness
 
-mergeM <- read.csv("Music_With_Country.csv")
-head(mergeM)
+
+# Calculate the quartile of speechiness and valence
+speechinessQ1 <- summary(music_data$speechiness)["1st Qu."]
+speechinessQ2 <- summary(music_data$speechiness)["Median"]
+speechinessQ3 <- summary(music_data$speechiness)["3rd Qu."]
+
+valenceQ1 <- summary(music_data$valence)["1st Qu."]
+valenceQ2 <- summary(music_data$valence)["Median"]
+valenceQ3 <- summary(music_data$valence)["3rd Qu."]
+
+# Add new columns to save each labels
+music_data$speechiness_label <- ifelse(music_data$speechiness < speechinessQ1, "Pure music",
+                                       ifelse(music_data$speechiness < speechinessQ2, "Song and words balaced",
+                                              ifelse(music_data$speechiness < speechinessQ3, "Word leads music",
+                                                     "Words oriented")))
+
+music_data$valence_label <- ifelse(music_data$valence < valenceQ1, "darkness",
+                                       ifelse(music_data$valence < valenceQ2, "Gray feeling",
+                                              ifelse(music_data$valence < valenceQ3, "positive",
+                                                     "brightness")))
+
+```
+
+```{r}
+# Reorder columns
+music_data <- music_data[, c("Name", "country","spotify_id", "name", "artists", "daily_rank",
+                             "daily_movement", "weekly_movement", "snapshot_date",
+                             "popularity", "is_explicit", "duration_ms", "album_name",
+                             "album_release_date", "danceability", "energy", "key",
+                             "loudness", "mode", "speechiness", "speechiness_label",
+                             "acousticness", "instrumentalness", "liveness", "valence",
+                             "valence_label", "tempo","time_signature", "Region_name")]
+
+music_data_withoutNA <- music_data[!is.na(music_data$Name), ]
+```
+
+
+```{r}
+# Save the Final dataset
+write.csv(music_data, "Music_Final.csv", row.names = FALSE)
+write.csv(music_data_withoutNA, "Music_Final_withoutNA.csv", row.names = FALSE)
+
 ```
 
 
