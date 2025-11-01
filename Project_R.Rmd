@@ -32,8 +32,8 @@ head(country_table)
 # Load dataset
 music_data <- read.csv("top_Trending_songs.csv")
 
-# Change the country of the first fifty records to ‘Global’
-music_data$country[1:50] <- "Global"
+# Change all null values and empty string in the country column to Global.
+music_data$country[music_data$country == ""] <- "Global"
 
 # Change the two date-related columns to date format
 music_data$snapshot_date <- as.Date(music_data$snapshot_date)
@@ -99,15 +99,17 @@ music_data <- music_data[, c("Name", "country","spotify_id", "name", "artists", 
                              "acousticness", "instrumentalness", "liveness", "valence",
                              "valence_label", "tempo","time_signature", "Region_name")]
 
-music_data_withoutNA <- music_data[!is.na(music_data$Name), ]
 ```
 
 
 ```{r}
 # Save the Final dataset
 write.csv(music_data, "Music_Final.csv", row.names = FALSE)
-write.csv(music_data_withoutNA, "Music_Final_withoutNA.csv", row.names = FALSE)
 
 ```
 
+
+```{r}
+Music_Final <- read.csv("Music_Final.csv")
+```
 
